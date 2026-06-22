@@ -40,7 +40,7 @@ python generate_playlist.py
 iFrame для Miro/Холста
 ----------------------
 <iframe
-  src="https://wow-school.github.io/EF_elementary_2/"
+  src="https://wow-school.github.io/elementary_10_12/"
   width="750"
   height="850"
   frameborder="0"
@@ -55,3 +55,6 @@ iFrame для Miro/Холста
 Если репозиторий будет называться иначе, поменяйте часть ссылки после `github.io/`.
 Например:
 https://wow-school.github.io/НАЗВАНИЕ_РЕПОЗИТОРИЯ/
+
+
+WOW SCHOOL fix: one-click embed version. Poster overlay removed; preview is served through preview.jpg / OpenGraph tags.

@@ -9,25 +9,19 @@
   <meta property="og:title" content="WOW SCHOOL — English File: Elementary 2" />
   <meta property="og:description" content="Audio player for English File Elementary 2" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://wow-school.github.io/EF_elementary_2/preview.jpg" />
+  <meta property="og:url" content="https://wow-school.github.io/elementary_10_12/" />
+  <meta property="og:image" content="https://wow-school.github.io/elementary_10_12/preview.jpg" />
   <meta property="og:image:width" content="750" />
   <meta property="og:image:height" content="850" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="WOW SCHOOL — English File: Elementary 2" />
   <meta name="twitter:description" content="Audio player for English File Elementary 2" />
-  <meta name="twitter:image" content="https://wow-school.github.io/EF_elementary_2/preview.jpg" />
-  <link rel="stylesheet" href="style.css?v=6" />
+  <meta name="twitter:image" content="https://wow-school.github.io/elementary_10_12/preview.jpg" />
+  <link rel="canonical" href="https://wow-school.github.io/elementary_10_12/" />
+  <link rel="image_src" href="https://wow-school.github.io/elementary_10_12/preview.jpg" />
+  <link rel="stylesheet" href="style.css?v=9" />
 </head>
 <body>
-  <!-- Обложка (постер) поверх плеера -->
-<div id="poster" class="poster" role="button" aria-label="Открыть плеер" tabindex="0">
-  <img src="cover.jpg" alt="English File — Elementary 2 (cover)" />
-  <button class="poster-play" aria-label="Play">
-    <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
-      <path d="M8 5v14l11-7z" fill="currentColor"></path>
-    </svg>
-  </button>
-</div>
   <header class="site-head">
     <div class="brand">WOW SCHOOL</div>
     <h1 class="page-title">English File: Elementary 2</h1>
@@ -97,7 +91,7 @@
     }
 
     // подгрузка плейлиста
-    fetch('playlist.json?v=6').then(r=>r.json()).then(data=>{
+    fetch('playlist.json?v=9').then(r=>r.json()).then(data=>{
       tracks = data.tracks || [];
       buildList();
       if (tracks.length) loadTrack(0, /*autoplay=*/false);
@@ -207,35 +201,5 @@
     });
   })();
   </script>
-  <script>
-  (function () {
-    const poster = document.getElementById('poster');
-    if (!poster) return;
-
-    // Найдём первый <audio> вашего плеера
-    const audio = document.querySelector('audio');
-
-    function hidePosterAndPlay() {
-      poster.classList.add('hide');
-      if (audio) {
-        audio.play().catch(() => {/* автоплей может быть заблокирован — не страшно */});
-      }
-    }
-
-    poster.addEventListener('click', hidePosterAndPlay);
-    poster.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        hidePosterAndPlay();
-      }
-    });
-
-    // На всякий случай: если пользователь кликнет по списку треков — спрячем постер
-    document.addEventListener('click', function once() {
-      poster.classList.add('hide');
-      document.removeEventListener('click', once);
-    }, { capture: true });
-  })();
-</script>
 </body>
 </html>
