@@ -5,7 +5,6 @@ import re
 ROOT = Path(__file__).resolve().parent
 TRACKS_DIR = ROOT / "tracks"
 PLAYLIST_FILE = ROOT / "playlist.json"
-
 AUDIO_EXTENSIONS = {".mp3", ".ogg", ".wav", ".m4a"}
 
 def natural_key(path: Path):
