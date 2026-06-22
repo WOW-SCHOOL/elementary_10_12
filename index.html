@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WOW SCHOOL — English File: Elementary 2</title>
+  <meta name="color-scheme" content="dark light" />
+  <meta name="description" content="WOW SCHOOL — English File: Elementary 2 audio player" />
+  <meta property="og:title" content="WOW SCHOOL — English File: Elementary 2" />
+  <meta property="og:description" content="Audio player for English File Elementary 2" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://wow-school.github.io/EF_elementary_2/preview.jpg" />
+  <meta property="og:image:width" content="750" />
+  <meta property="og:image:height" content="850" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="WOW SCHOOL — English File: Elementary 2" />
+  <meta name="twitter:description" content="Audio player for English File Elementary 2" />
+  <meta name="twitter:image" content="https://wow-school.github.io/EF_elementary_2/preview.jpg" />
+  <link rel="stylesheet" href="style.css?v=6" />
+</head>
+<body>
+  <!-- Обложка (постер) поверх плеера -->
+<div id="poster" class="poster" role="button" aria-label="Открыть плеер" tabindex="0">
+  <img src="cover.jpg" alt="English File — Elementary 2 (cover)" />
+  <button class="poster-play" aria-label="Play">
+    <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+      <path d="M8 5v14l11-7z" fill="currentColor"></path>
+    </svg>
+  </button>
+</div>
+  <header class="site-head">
+    <div class="brand">WOW SCHOOL</div>
+    <h1 class="page-title">English File: Elementary 2</h1>
+  </header>
+
+  <main class="player-card" role="region" aria-label="Аудиоплеер">
+    <!-- Now playing -->
+    <div class="now">
+      <div class="np-top">
+        <div class="np-title" id="npTitle">—</div>
+        <div class="np-time"><span id="cur">0:00</span> / <span id="dur">0:00</span></div>
+      </div>
+
+      <!-- progress -->
+      <input id="seek" class="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Позиция трека" />
+    </div>
+
+    <!-- track list -->
+    <ul id="list" class="tracklist" role="listbox" aria-label="Список треков"></ul>
+
+    <!-- controls (СНИЗУ ПО ЦЕНТРУ) -->
+    <div class="controls">
+      <button id="prev" class="ctrl ctrl-sm" aria-label="Предыдущий трек" title="Предыдущий">
+        <!-- chevron-left -->
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </button>
+
+      <button id="play" class="ctrl ctrl-lg" aria-label="Воспроизвести/пауза" title="Воспроизвести/пауза">
+        <!-- play -->
+        <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        <!-- pause -->
+        <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      </button>
+
+      <button id="next" class="ctrl ctrl-sm" aria-label="Следующий трек" title="Следующий">
+        <!-- chevron-right -->
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-1.41 1.41L13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </button>
+    </div>
+  </main>
+
+  <!-- hidden audio element -->
+  <audio id="audio" preload="metadata"></audio>
+
+  <script>
+  (function () {
+    const audio  = document.getElementById('audio');
+    const npTitle= document.getElementById('npTitle');
+    const cur    = document.getElementById('cur');
+    const dur    = document.getElementById('dur');
+    const seek   = document.getElementById('seek');
+    const listEl = document.getElementById('list');
+    const btnPrev= document.getElementById('prev');
+    const btnNext= document.getElementById('next');
+    const btnPlay= document.getElementById('play');
+
+    let tracks = [];
+    let index  = 0;
+    let isSeeking = false;
+
+    // формат времени
+    function t(s) {
+      if (!isFinite(s)) return '0:00';
+      const m = Math.floor(s/60);
+      const k = Math.floor(s%60).toString().padStart(2,'0');
+      return m + ':' + k;
+    }
+
+    // подгрузка плейлиста
+    fetch('playlist.json?v=6').then(r=>r.json()).then(data=>{
+      tracks = data.tracks || [];
+      buildList();
+      if (tracks.length) loadTrack(0, /*autoplay=*/false);
+    }).catch(console.error);
+
+    // построить список
+    function buildList() {
+      listEl.innerHTML = '';
+      tracks.forEach((item, i) => {
+        const li = document.createElement('li');
+        li.className = 'row';
+        li.setAttribute('role','option');
+        li.setAttribute('data-i', i);
+
+        const num  = document.createElement('span'); num.className='t-num';   num.textContent = (i+1);
+        const name = document.createElement('span'); name.className='t-title'; name.textContent = item.title || ('Track ' + (i+1));
+        const len  = document.createElement('span'); len.className='t-len';   len.textContent = item.dur || '';
+
+        li.append(num, name, len);
+        li.addEventListener('click', () => loadTrack(i, true));
+        listEl.appendChild(li);
+
+        // если нет длительности в JSON — подгрузим фоном
+        if (!item.dur) {
+          const a = new Audio();
+          a.src = item.file;
+          a.preload = 'metadata';
+          a.addEventListener('loadedmetadata', () => {
+            item.dur = t(a.duration);
+            len.textContent = item.dur;
+          }, {once:true});
+        }
+      });
+    }
+
+    // загрузить трек
+    function loadTrack(i, autoplay) {
+      index = (i + tracks.length) % tracks.length;
+      const tr = tracks[index];
+      [...listEl.children].forEach(el => el.classList.remove('active'));
+      const active = listEl.querySelector('[data-i="'+index+'"]');
+      if (active) active.classList.add('active');
+
+      audio.src = tr.file;
+      audio.currentTime = 0;
+      npTitle.textContent = tr.title || ('Track ' + (index+1));
+      cur.textContent = '0:00';
+      dur.textContent = tr.dur || '0:00';
+      seek.value = 0;
+
+      if (autoplay) audio.play().catch(()=>{});
+      updatePlayBtn();
+    }
+
+    // обновление кнопки
+    function updatePlayBtn(){
+      btnPlay.classList.toggle('is-playing', !audio.paused);
+    }
+
+    // события audio
+    audio.addEventListener('play',  updatePlayBtn);
+    audio.addEventListener('pause', updatePlayBtn);
+    audio.addEventListener('loadedmetadata', () => {
+      dur.textContent = t(audio.duration);
+    });
+    audio.addEventListener('timeupdate', () => {
+      if (isSeeking) return;
+      cur.textContent = t(audio.currentTime);
+      if (isFinite(audio.duration) && audio.duration > 0) {
+        seek.value = Math.floor(audio.currentTime / audio.duration * 1000);
+      }
+    });
+    audio.addEventListener('ended', () => {
+      next();
+    });
+
+    // управление
+    function playPause(){ audio.paused ? audio.play().catch(()=>{}) : audio.pause(); }
+    function prev(){ loadTrack(index-1, true); }
+    function next(){ loadTrack(index+1, true); }
+
+    btnPlay.addEventListener('click', playPause);
+    btnPrev.addEventListener('click', prev);
+    btnNext.addEventListener('click', next);
+
+    // перемотка
+    seek.addEventListener('pointerdown', ()=>{ isSeeking = true; });
+    seek.addEventListener('pointerup',   (e)=>{ isSeeking = false; applySeek(e); });
+    seek.addEventListener('change',      applySeek);
+    function applySeek(){
+      if (!isFinite(audio.duration) || audio.duration<=0) return;
+      const pos = Number(seek.value)/1000;
+      audio.currentTime = pos * audio.duration;
+      cur.textContent = t(audio.currentTime);
+    }
+
+    // клавиатура: пробел play/pause, ←/→ seek, J/K/L как в плеерах
+    window.addEventListener('keydown', (e)=>{
+      const tag = (e.target.tagName||'').toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+      if (e.code === 'Space') { e.preventDefault(); playPause(); }
+      if (e.code === 'ArrowLeft')  audio.currentTime = Math.max(0, audio.currentTime - 5);
+      if (e.code === 'ArrowRight') audio.currentTime = Math.min(audio.duration||0, audio.currentTime + 5);
+      if (e.key.toLowerCase() === 'j') audio.currentTime = Math.max(0, audio.currentTime - 10);
+      if (e.key.toLowerCase() === 'l') audio.currentTime = Math.min(audio.duration||0, audio.currentTime + 10);
+      if (e.key.toLowerCase() === 'k') playPause();
+    });
+  })();
+  </script>
+  <script>
+  (function () {
+    const poster = document.getElementById('poster');
+    if (!poster) return;
+
+    // Найдём первый <audio> вашего плеера
+    const audio = document.querySelector('audio');
+
+    function hidePosterAndPlay() {
+      poster.classList.add('hide');
+      if (audio) {
+        audio.play().catch(() => {/* автоплей может быть заблокирован — не страшно */});
+      }
+    }
+
+    poster.addEventListener('click', hidePosterAndPlay);
+    poster.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        hidePosterAndPlay();
+      }
+    });
+
+    // На всякий случай: если пользователь кликнет по списку треков — спрячем постер
+    document.addEventListener('click', function once() {
+      poster.classList.add('hide');
+      document.removeEventListener('click', once);
+    }, { capture: true });
+  })();
+</script>
+</body>
+</html>
